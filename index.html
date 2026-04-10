@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Asimod ic giyim markasi yatirim raporu: TAM/SAM/SOM analizi, birim ekonomisi ve interaktif 3 yillik pazar payi simulasyonu." />
+<title>Asimod | Yatirim Raporu ve Simulasyon</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+<link href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" rel="stylesheet" />
+<link href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css" rel="stylesheet" />
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js" defer></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          navy: { DEFAULT: '#0a1f44', 700: '#0a1f44', 800: '#071633', 900: '#040d20' },
+          lemon: { DEFAULT: '#f5e663', 500: '#f5e663', 600: '#e8d844' },
+          ink: '#0b0b0b'
+        },
+        fontFamily: {
+          sans: ['Roboto', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+
+<style>
+  :root {
+    --navy: #0a1f44;
+    --lemon: #f5e663;
+    --ink: #0b0b0b;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 300;
+    font-size: 1rem;
+    color: var(--ink);
+    background: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.01em; }
+  h1 { font-weight: 700; }
+  .section-title {
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    border-bottom: 1px solid #0b0b0b;
+    padding-bottom: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  @media (min-width: 768px) {
+    .section-title { font-size: 2.25rem; }
+  }
+
+  /* Custom range slider */
+  input[type="range"].asi-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #e5e5e5;
+    border-radius: 999px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"].asi-range::-webkit-slider-runnable-track {
+    height: 6px;
+    background: linear-gradient(to right, var(--navy) 0%, var(--navy) var(--fill,0%), #e5e5e5 var(--fill,0%), #e5e5e5 100%);
+    border-radius: 999px;
+  }
+  input[type="range"].asi-range::-moz-range-track {
+    height: 6px;
+    background: #e5e5e5;
+    border-radius: 999px;
+  }
+  input[type="range"].asi-range::-moz-range-progress {
+    height: 6px;
+    background: var(--navy);
+    border-radius: 999px;
+  }
+  input[type="range"].asi-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--lemon);
+    border: 3px solid var(--navy);
+    cursor: pointer;
+    margin-top: -10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.15s ease;
+  }
+  input[type="range"].asi-range::-webkit-slider-thumb:hover { transform: scale(1.1); }
+  input[type="range"].asi-range::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--lemon);
+    border: 3px solid var(--navy);
+    cursor: pointer;
+  }
+  input[type="range"].asi-range:focus { outline: 2px solid var(--navy); outline-offset: 4px; }
+
+  .kpi-card {
+    border: 1px solid #e5e5e5;
+    padding: 1.5rem;
+    background: #fff;
+    transition: border-color .2s, transform .2s;
+  }
+  .kpi-card:hover { border-color: var(--navy); transform: translateY(-2px); }
+
+  .nav-link { position: relative; padding: 0.25rem 0; }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--navy);
+    transition: width .2s;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  .btn-primary {
+    background: var(--navy);
+    color: #fff;
+    padding: 0.9rem 2rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: background .2s, transform .15s;
+  }
+  .btn-primary:hover { background: var(--ink); transform: translateY(-1px); }
+  .btn-primary:focus-visible { outline: 3px solid var(--lemon); outline-offset: 3px; }
+
+  .divider { height: 1px; background: #e5e5e5; }
+
+  table.asi-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  table.asi-table th, table.asi-table td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid #e5e5e5; }
+  table.asi-table th { font-weight: 500; background: #fafafa; }
+  table.asi-table tr:hover td { background: #fafafa; }
+
+  .chip {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    border: 1px solid var(--navy);
+    color: var(--navy);
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .chip.lemon { background: var(--lemon); border-color: var(--ink); color: var(--ink); }
+
+  .timeline-step {
+    border-left: 2px solid var(--navy);
+    padding-left: 1.5rem;
+    padding-bottom: 2rem;
+    position: relative;
+  }
+  .timeline-step::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    background: var(--lemon);
+    border: 2px solid var(--navy);
+    border-radius: 50%;
+  }
+
+  @media print {
+    nav, .no-print { display: none !important; }
+    section { page-break-inside: avoid; }
+    body { font-size: 11pt; }
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .skip-link:focus {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    width: auto;
+    height: auto;
+    padding: 0.75rem 1rem;
+    background: var(--navy);
+    color: #fff;
+    z-index: 100;
+  }
+</style>
+</head>
+<body class="antialiased">
+
+<a href="#main" class="skip-link">Icerige gec</a>
+
+<!-- NAV -->
+<nav class="sticky top-0 z-40 bg-white border-b border-black/10 no-print" aria-label="Ana gezinme">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <a href="#hero" class="text-xl font-bold tracking-tight">ASIMOD</a>
+    <ul class="hidden md:flex gap-7 text-base">
+      <li><a class="nav-link" href="#ozet">Ozet</a></li>
+      <li><a class="nav-link" href="#butce">Butce</a></li>
+      <li><a class="nav-link" href="#fayda">Yatirim Faydasi</a></li>
+      <li><a class="nav-link" href="#simulasyon">Simulasyon</a></li>
+      <li><a class="nav-link" href="#seo">SEO</a></li>
+      <li><a class="nav-link" href="#playbook">90 Gun</a></li>
+    </ul>
+    <a href="#simulasyon" class="btn-primary text-sm hidden sm:inline-flex" aria-label="Simulasyon bolumune gec">
+      Simulasyon <i class="ph-bold ph-arrow-right" aria-hidden="true"></i>
+    </a>
+  </div>
+</nav>
+
+<main id="main">
+
+<!-- HERO -->
+<section id="hero" class="border-b border-black/10">
+  <div class="max-w-6xl mx-auto px-4 py-16 md:py-24 grid md:grid-cols-12 gap-10 items-center">
+    <div class="md:col-span-7">
+      <p class="text-sm uppercase tracking-[0.25em] text-navy mb-4">Ic Giyim Yatirim Raporu</p>
+      <h1 class="text-4xl md:text-6xl leading-[1.05] mb-6">
+        Yatiriminizin<br/>
+        <span class="bg-lemon px-2 inline-block">yuzu.</span>
+      </h1>
+      <p class="text-lg md:text-xl font-light max-w-xl mb-8 leading-relaxed">
+        Turkiye ic giyim pazari 1 milyar USD toplam pazarla, 600-700 milyon USD erisebilir saf ic giyim segmentiyle Asimod icin yapisal bir firsat tasiyor. Bu rapor TAM/SAM/SOM analizini, birim ekonomisini ve 3 yillik pazar payi hedeflerini interaktif olarak modelliyor.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a href="#simulasyon" class="btn-primary">
+          Simulasyona gec <i class="ph-bold ph-arrow-right" aria-hidden="true"></i>
+        </a>
+        <a href="#ozet" class="inline-flex items-center gap-2 px-6 py-3.5 border border-black text-base hover:bg-black hover:text-white transition">
+          Yonetici ozeti <i class="ph ph-caret-down" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+    <aside class="md:col-span-5 border border-black p-8" aria-label="Pazar buyukluk ozeti">
+      <dl class="space-y-6">
+        <div>
+          <dt class="text-sm uppercase tracking-wider text-gray-500">Toplam pazar (TAM)</dt>
+          <dd class="text-4xl font-bold">~1 milyar <span class="text-lg font-normal">USD</span></dd>
+          <dd class="text-sm text-gray-600">33-45 milyar TL, genis tanim</dd>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <dt class="text-sm uppercase tracking-wider text-gray-500">Erisebilir pazar (SAM)</dt>
+          <dd class="text-4xl font-bold">600-700M <span class="text-lg font-normal">USD</span></dd>
+          <dd class="text-sm text-gray-600">Saf ic giyim, online kanal</dd>
+        </div>
+        <div class="divider"></div>
+        <div>
+          <dt class="text-sm uppercase tracking-wider text-gray-500">3 yillik SOM hedefi</dt>
+          <dd class="text-4xl font-bold">0.10 - 0.25<span class="text-lg font-normal">%</span></dd>
+          <dd class="text-sm text-gray-600">22-55 milyon TL GMV bandi</dd>
+        </div>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<!-- OZET -->
+<section id="ozet" class="py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="section-title">Yonetici Ozeti</h2>
+    <p class="text-lg max-w-3xl mb-10 leading-relaxed">
+      Asimod'un stratejik pozisyonu: mass pazar ile mid-market arasindaki "erisilebilir kalite" boslugu. 150-400 TL tekli urun bandinda Penti ve Suwen'in bos biraktigi alanda konumlanma firsati var. Anahtar kirilma noktasi: ortalama sepet tutari 350 TL'nin uzerine cekilmeli.
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <article class="kpi-card">
+        <i class="ph-bold ph-globe text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">TAM</h3>
+        <p class="text-3xl font-bold mt-1">~1 milyar USD</p>
+        <p class="text-sm text-gray-600 mt-2">Turkiye ic giyim toplam pazari, 33-45 milyar TL</p>
+      </article>
+      <article class="kpi-card">
+        <i class="ph-bold ph-target text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">SAM (online)</h3>
+        <p class="text-3xl font-bold mt-1">600-700M USD</p>
+        <p class="text-sm text-gray-600 mt-2">Saf ic giyim, luks haric erisebilir bant</p>
+      </article>
+      <article class="kpi-card">
+        <i class="ph-bold ph-trend-up text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">3 yil SOM hedefi</h3>
+        <p class="text-3xl font-bold mt-1">22-55M TL</p>
+        <p class="text-sm text-gray-600 mt-2">%0.10-0.25 pazar payi, 5-13 bin aylik siparis</p>
+      </article>
+      <article class="kpi-card">
+        <i class="ph-bold ph-coins text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">90 gun butcesi</h3>
+        <p class="text-3xl font-bold mt-1">200-350K TL</p>
+        <p class="text-sm text-gray-600 mt-2">Lansman + performans + gerilla</p>
+      </article>
+      <article class="kpi-card">
+        <i class="ph-bold ph-chart-line-up text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">Basabas AOV</h3>
+        <p class="text-3xl font-bold mt-1">262-297 TL</p>
+        <p class="text-sm text-gray-600 mt-2">Marketplace 262 TL, DTC 297 TL esik</p>
+      </article>
+      <article class="kpi-card">
+        <i class="ph-bold ph-flag text-3xl text-navy" aria-hidden="true"></i>
+        <h3 class="text-sm uppercase tracking-wider text-gray-500 mt-3">Hedef AOV</h3>
+        <p class="text-3xl font-bold mt-1">350-450 TL</p>
+        <p class="text-sm text-gray-600 mt-2">3'lu paket stratejisi, ucretsiz kargo esigi</p>
+      </article>
+    </div>
+
+    <div class="mt-10 bg-navy text-white p-6 md:p-8">
+      <div class="flex items-start gap-4">
+        <i class="ph-bold ph-warning-circle text-3xl text-lemon shrink-0" aria-hidden="true"></i>
+        <div>
+          <h3 class="text-xl font-medium mb-2">Kritik risk: birim ekonomisi</h3>
+          <p class="text-base leading-relaxed">
+            Mevcut fiyat-kargo denkleminde tek urunlu 150 TL siparisler 47-55 TL zarar uretiyor. 100 TL sabit kargo maliyeti ve %35 COGS varsayimi altinda marketplace basabas AOV'si 262 TL, DTC basabas AOV'si 297 TL. Paket satis ve 300 TL uzeri ucretsiz kargo esigi zorunlu.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUTCE / NEREYE NE KADAR PARA -->
+<section id="butce" class="py-16 md:py-20 bg-gray-50 border-y border-black/10">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="section-title">Nereye ne kadar para</h2>
+    <p class="text-lg max-w-3xl mb-10 leading-relaxed">
+      Ilk 90 gunluk lansman butcesi 200-350 bin TL bandinda. Performans pazarlama en buyuk kalem (%40), ardindan on lansman seeding ve influencer (%20) geliyor.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-10 items-start">
+      <div>
+        <div id="butceChart" class="w-full h-[360px]" role="img" aria-label="Butce dagilim donut grafigi"></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="asi-table" aria-label="90 gun butce kalemleri">
+          <thead>
+            <tr>
+              <th scope="col">Kalem</th>
+              <th scope="col" class="text-right">TL bandi</th>
+              <th scope="col" class="text-right">Pay</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Performans pazarlama</td><td class="text-right">80-130K</td><td class="text-right">%40</td></tr>
+            <tr><td>On lansman + influencer</td><td class="text-right">40-75K</td><td class="text-right">%20</td></tr>
+            <tr><td>Gerilla + pop-up</td><td class="text-right">25-50K</td><td class="text-right">%12</td></tr>
+            <tr><td>Icerik uretimi</td><td class="text-right">20-35K</td><td class="text-right">%10</td></tr>
+            <tr><td>Marketplace kampanya</td><td class="text-right">15-30K</td><td class="text-right">%8</td></tr>
+            <tr><td>PR + arac seti</td><td class="text-right">15-25K</td><td class="text-right">%7</td></tr>
+            <tr class="font-bold">
+              <td>TOPLAM</td>
+              <td class="text-right">200-350K</td>
+              <td class="text-right">100%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mt-12">
+      <h3 class="text-xl font-medium mb-4">3 yillik dijital buyume harcama projeksiyonu</h3>
+      <div id="trendChart" class="w-full h-[320px]" role="img" aria-label="3 yil butce bar chart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAYDA -->
+<section id="fayda" class="py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="section-title">Yatirimin faydasi</h2>
+
+    <div class="grid md:grid-cols-2 gap-10">
+      <div>
+        <h3 class="text-xl font-medium mb-4">Rekabet bandi: gelir olceginde Asimod</h3>
+        <div id="competitorChart" class="w-full h-[340px]" role="img" aria-label="Penti Suwen Asimod karsilastirma"></div>
+        <p class="text-sm text-gray-600 mt-3">Penti 250-500M USD gelir, Suwen 2.5 milyar TL. Asimod hedefi 3 yilda 22-55M TL GMV ile mikro-butik lansman.</p>
+      </div>
+      <div>
+        <h3 class="text-xl font-medium mb-4">LTV:CAC senaryolari</h3>
+        <div id="ltvChart" class="w-full h-[340px]" role="img" aria-label="LTV CAC karsilastirma"></div>
+        <p class="text-sm text-gray-600 mt-3">Muhafazakar senaryoda 0.3:1, iyimser 1.5:1. AOV 400+ ve kargo 60-70 TL iyilestirmesi ile 2.5-3.5:1 saglikli bandina cekilir.</p>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <h3 class="text-xl font-medium mb-4">Nano vs Makro influencer ekonomisi</h3>
+      <div class="overflow-x-auto">
+        <table class="asi-table">
+          <thead>
+            <tr>
+              <th scope="col">Segment</th>
+              <th scope="col" class="text-right">CAC</th>
+              <th scope="col" class="text-right">Donusum</th>
+              <th scope="col" class="text-right">Etkilesim</th>
+              <th scope="col" class="text-right">LTV:CAC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Nano (1K-10K)</td>
+              <td class="text-right">$18.5</td>
+              <td class="text-right font-medium">%4.2</td>
+              <td class="text-right">%6-9</td>
+              <td class="text-right"><span class="chip lemon">15.35x</span></td>
+            </tr>
+            <tr>
+              <td>Mikro (10K-100K)</td>
+              <td class="text-right">$22.75</td>
+              <td class="text-right">%3.1</td>
+              <td class="text-right">%3-6</td>
+              <td class="text-right"><span class="chip">11.74x</span></td>
+            </tr>
+            <tr>
+              <td>Makro (100K-1M)</td>
+              <td class="text-right">$67.4</td>
+              <td class="text-right">%0.8</td>
+              <td class="text-right">%1-3</td>
+              <td class="text-right"><span class="chip">2.98x</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-sm text-gray-600 mt-4 leading-relaxed">
+        Asimod butce dagilimi: nano %70, makro %30. Ilk 3 ay 30-50 nano hediye (5-10K TL), 4-6 ay 10 mikro ucretli isbirligi.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULASYON -->
+<section id="simulasyon" class="py-16 md:py-24 bg-navy text-white" x-data="asiSim()">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="mb-14">
+      <p class="text-sm uppercase tracking-[0.25em] text-lemon mb-3">Interaktif model</p>
+      <h2 class="text-3xl md:text-5xl font-medium mb-4">3 yillik pazar payi simulasyonu</h2>
+      <p class="text-lg max-w-3xl leading-relaxed text-white/80">
+        SAM sabiti <strong class="text-white">600 milyon USD (21.6 milyar TL)</strong> kabul edilmistir (USD/TRY = 36). Slider'lari ayarlayarak yil bazli pazar payi hedefinizi ve ortalama sepet tutarini degistirin; GMV, siparis sayisi ve katki marji gercek zamanli guncellenir.
+      </p>
+    </div>
+
+    <!-- AOV GLOBAL -->
+    <div class="mb-12 border border-white/20 p-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div>
+          <label for="aovSlider" class="block text-sm uppercase tracking-wider text-lemon mb-1">Ortalama sepet tutari (AOV)</label>
+          <p class="text-3xl font-bold" x-text="fmtTL(aov)"></p>
+        </div>
+        <div class="text-sm text-white/70 max-w-md">
+          AOV'yi 250-500 TL araliginda ayarlayin. Ucuncu seviye ambalaj+kargo 150 TL sabit varsayilmistir. Birim ekonomisi tum yil modellerini etkiler.
+        </div>
+      </div>
+      <input id="aovSlider" type="range" class="asi-range" min="250" max="500" step="10" x-model.number="aov" @input="updateAll()" aria-label="Ortalama sepet tutari slideri" />
+      <div class="flex justify-between text-xs text-white/60 mt-2">
+        <span>250 TL</span><span>375 TL</span><span>500 TL</span>
+      </div>
+    </div>
+
+    <!-- YEAR TEMPLATE -->
+    <template x-for="(year, idx) in years" :key="year.key">
+      <article class="mb-14 border border-white/20 p-6 md:p-8" :aria-label="year.title">
+        <header class="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
+          <div>
+            <p class="text-sm uppercase tracking-[0.25em] text-lemon">Yil <span x-text="idx+1"></span></p>
+            <h3 class="text-2xl md:text-3xl font-medium" x-text="year.title"></h3>
+          </div>
+          <div class="text-right">
+            <p class="text-xs uppercase text-white/60">Hedef pazar payi</p>
+            <p class="text-4xl md:text-5xl font-bold text-lemon" x-text="year.share.toFixed(2) + '%'"></p>
+          </div>
+        </header>
+
+        <!-- SLIDER -->
+        <div class="mb-6">
+          <input type="range" class="asi-range"
+                 :min="year.min" :max="year.max" :step="year.step"
+                 x-model.number="year.share"
+                 @input="updateAll()"
+                 :aria-label="year.title + ' pazar payi slideri'" />
+          <div class="flex justify-between text-xs text-white/60 mt-2">
+            <span x-text="year.min.toFixed(2) + '%'"></span>
+            <span x-text="year.max.toFixed(2) + '%'"></span>
+          </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="mb-8" role="progressbar" :aria-valuenow="year.share" :aria-valuemin="year.min" :aria-valuemax="year.max">
+          <div class="h-2 bg-white/15 relative overflow-hidden">
+            <div class="h-full bg-lemon transition-all duration-300" :style="'width:' + ((year.share - year.min)/(year.max - year.min) * 100) + '%'"></div>
+          </div>
+        </div>
+
+        <!-- METRICS GRID -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="border border-white/15 p-4">
+            <p class="text-xs uppercase tracking-wider text-white/60 mb-1">SOM (GMV)</p>
+            <p class="text-xl md:text-2xl font-bold" x-text="fmtTL(calc(year).gmv)"></p>
+            <p class="text-xs text-white/60 mt-1">KDV dahil brut</p>
+          </div>
+          <div class="border border-white/15 p-4">
+            <p class="text-xs uppercase tracking-wider text-white/60 mb-1">Yillik siparis</p>
+            <p class="text-xl md:text-2xl font-bold" x-text="fmtNum(calc(year).orders)"></p>
+            <p class="text-xs text-white/60 mt-1">Aylik: <span x-text="fmtNum(Math.round(calc(year).orders/12))"></span></p>
+          </div>
+          <div class="border border-white/15 p-4">
+            <p class="text-xs uppercase tracking-wider text-white/60 mb-1">KDV'siz gelir</p>
+            <p class="text-xl md:text-2xl font-bold" x-text="fmtTL(calc(year).netRev)"></p>
+            <p class="text-xs text-white/60 mt-1">GMV / 1.20</p>
+          </div>
+          <div class="border p-4" :class="calc(year).contrib >= 0 ? 'border-lemon bg-lemon/10' : 'border-red-400 bg-red-900/20'">
+            <p class="text-xs uppercase tracking-wider mb-1" :class="calc(year).contrib >= 0 ? 'text-lemon' : 'text-red-300'">Katki marji</p>
+            <p class="text-xl md:text-2xl font-bold" x-text="fmtTL(calc(year).contrib)"></p>
+            <p class="text-xs mt-1" :class="calc(year).contrib >= 0 ? 'text-lemon/80' : 'text-red-300/80'">
+              <span x-text="calc(year).marginPct.toFixed(1) + '%'"></span> net gelirin
+            </p>
+          </div>
+        </div>
+
+        <!-- BREAKDOWN + CHART -->
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <h4 class="text-sm uppercase tracking-wider text-lemon mb-3">Maliyet kirinimi</h4>
+            <dl class="text-sm space-y-2">
+              <div class="flex justify-between border-b border-white/10 pb-1.5">
+                <dt>COGS (%35)</dt>
+                <dd x-text="fmtTL(calc(year).cogs)"></dd>
+              </div>
+              <div class="flex justify-between border-b border-white/10 pb-1.5">
+                <dt>Komisyon / reklam (%25)</dt>
+                <dd x-text="fmtTL(calc(year).commission)"></dd>
+              </div>
+              <div class="flex justify-between border-b border-white/10 pb-1.5">
+                <dt>Ambalaj + kargo (150 TL/siparis)</dt>
+                <dd x-text="fmtTL(calc(year).logistics)"></dd>
+              </div>
+              <div class="flex justify-between pt-2 font-bold text-lemon">
+                <dt>Katki marji</dt>
+                <dd x-text="fmtTL(calc(year).contrib)"></dd>
+              </div>
+            </dl>
+            <p class="text-xs text-white/60 mt-4 leading-relaxed">
+              <i class="ph ph-info" aria-hidden="true"></i>
+              Isletme giderleri (personel, kira, yazilim, pazarlama sabit) <strong>dahil edilmemistir</strong>. Bu tablo sadece birim ekonomisinden gelen katki marjidir. Net kar icin isletme giderleri ayrica dusulmelidir.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-sm uppercase tracking-wider text-lemon mb-3">Gorsel kirinim</h4>
+            <div :id="'chart_' + year.key" class="w-full h-[280px]" role="img" :aria-label="year.title + ' maliyet kirinim grafigi'"></div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <!-- SUMMARY CHART -->
+    <div class="mt-16 border border-white/20 p-6 md:p-8">
+      <h3 class="text-xl md:text-2xl font-medium mb-2">3 yillik konsolide projeksiyon</h3>
+      <p class="text-sm text-white/70 mb-6">Yukaridaki slider'lar degistikce buradaki bar chart otomatik guncellenir.</p>
+      <div id="summaryChart" class="w-full h-[360px]" role="img" aria-label="3 yillik GMV ve katki marji konsolide grafik"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SEO -->
+<section id="seo" class="py-16 md:py-20">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="section-title">SEO notu: renk ve beden stratejisi</h2>
+    <div class="grid md:grid-cols-2 gap-10">
+      <article>
+        <div class="flex items-center gap-3 mb-3">
+          <i class="ph-bold ph-palette text-2xl text-navy" aria-hidden="true"></i>
+          <h3 class="text-xl font-medium">Renk varyantlari: ayri URL</h3>
+        </div>
+        <p class="leading-relaxed">
+          Her renk ayri bir kanonik URL olarak yayinlanmali. Siyah, beyaz, bordo ve gri varyantlari 4 kat daha fazla index, 4 kat daha fazla uzun kuyruk sorguya erisim saglar. "Siyah atlet erkek", "beyaz kulot kadin" gibi niyet odakli aramalar icin ayri URL zorunlu.
+        </p>
+        <div class="mt-4">
+          <span class="chip">/erkek-atlet-siyah</span>
+          <span class="chip">/erkek-atlet-beyaz</span>
+          <span class="chip">/kadin-kulot-bordo</span>
+        </div>
+      </article>
+      <article>
+        <div class="flex items-center gap-3 mb-3">
+          <i class="ph-bold ph-ruler text-2xl text-navy" aria-hidden="true"></i>
+          <h3 class="text-xl font-medium">Bedenler: tek URL, attribute</h3>
+        </div>
+        <p class="leading-relaxed">
+          Beden bilgisi ayni URL icinde secilebilir attribute olmali. S/M/L/XL icin ayri URL yaratmak arama motorlarinda canonical/duplicate cezasi dogurur. Beden aramalari zaten dusuk hacimli ve donusum orani renklere gore cok daha dusuk.
+        </p>
+        <div class="mt-4">
+          <span class="chip lemon">/erkek-atlet-siyah?beden=M</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- 90 GUN PLAYBOOK -->
+<section id="playbook" class="py-16 md:py-20 bg-gray-50 border-t border-black/10">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="section-title">Ilk 90 gun playbook</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="timeline-step">
+        <p class="text-sm uppercase tracking-wider text-navy mb-1">Faz 1</p>
+        <h3 class="text-xl font-medium mb-3">On lansman (Gun -30 to 0)</h3>
+        <ul class="text-base space-y-2 leading-relaxed">
+          <li>Viral bekleme listesi (5-8K TL)</li>
+          <li>Teaser kampanya (10-20K TL)</li>
+          <li>Influencer seeding (20-40K TL)</li>
+          <li>WhatsApp VIP grubu (0 TL)</li>
+          <li>PR hazirligi (5-10K TL)</li>
+        </ul>
+        <p class="text-sm text-gray-600 mt-3"><strong>Butce: 40-75K TL</strong></p>
+      </div>
+      <div class="timeline-step">
+        <p class="text-sm uppercase tracking-wider text-navy mb-1">Faz 2</p>
+        <h3 class="text-xl font-medium mb-3">Lansman haftasi (Gun 0-14)</h3>
+        <ul class="text-base space-y-2 leading-relaxed">
+          <li>Trendyol + Hepsiburada lansmani</li>
+          <li>Flash sale: ilk 500 siparis %40 indirim</li>
+          <li>Performans pazarlama blitz (30-60K TL)</li>
+          <li>Sokak aktivasyonu (15-30K TL)</li>
+          <li>Ilk 20 siparis kusursuz teslim</li>
+        </ul>
+        <p class="text-sm text-gray-600 mt-3"><strong>Butce: 45-90K TL</strong></p>
+      </div>
+      <div class="timeline-step">
+        <p class="text-sm uppercase tracking-wider text-navy mb-1">Faz 3</p>
+        <h3 class="text-xl font-medium mb-3">Buyume ivmesi (Gun 15-90)</h3>
+        <ul class="text-base space-y-2 leading-relaxed">
+          <li>Retargeting + lookalike olceklendirme</li>
+          <li>Yorum toplama hedefi: 50+</li>
+          <li>Haftalik yeni urun drop</li>
+          <li>UGC kampanya #AsimodTarzim</li>
+          <li>Referral programi (100 TL kupon)</li>
+        </ul>
+        <p class="text-sm text-gray-600 mt-3"><strong>Butce: 115-185K TL</strong></p>
+      </div>
+    </div>
+
+    <div class="mt-12 border border-black p-6 md:p-8">
+      <h3 class="text-lg font-medium mb-4">90 gun KPI hedefleri</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div><p class="text-xs uppercase text-gray-500">Email listesi</p><p class="text-2xl font-bold">5-10K</p></div>
+        <div><p class="text-xs uppercase text-gray-500">Trendyol puan</p><p class="text-2xl font-bold">4.5+</p></div>
+        <div><p class="text-xs uppercase text-gray-500">GMV</p><p class="text-2xl font-bold">100-300K TL</p></div>
+        <div><p class="text-xs uppercase text-gray-500">CAC</p><p class="text-2xl font-bold">50-100 TL</p></div>
+        <div><p class="text-xs uppercase text-gray-500">Tekrar satin alma</p><p class="text-2xl font-bold">%15-25</p></div>
+        <div><p class="text-xs uppercase text-gray-500">Yorum</p><p class="text-2xl font-bold">100+</p></div>
+        <div><p class="text-xs uppercase text-gray-500">Instagram</p><p class="text-2xl font-bold">5-15K</p></div>
+        <div><p class="text-xs uppercase text-gray-500">AOV hedef</p><p class="text-2xl font-bold">350+ TL</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="py-10 bg-ink text-white/70 text-sm">
+  <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between gap-4">
+    <p>ASIMOD Ic Giyim - Yatirim Analiz Raporu</p>
+    <p>TAM/SAM/SOM + Birim Ekonomisi + Interaktif Simulasyon</p>
+  </div>
+</footer>
+
+</main>
+
+<script>
+  // Palette
+  const NAVY = '#0a1f44';
+  const LEMON = '#f5e663';
+  const INK = '#0b0b0b';
+  const GRAY = '#9ca3af';
+
+  const TL = (n) => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' TL';
+  const NUM = (n) => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n));
+
+  // Update range slider fill for webkit
+  document.addEventListener('input', (e) => {
+    if (e.target.classList && e.target.classList.contains('asi-range')) {
+      const min = parseFloat(e.target.min);
+      const max = parseFloat(e.target.max);
+      const val = parseFloat(e.target.value);
+      const pct = ((val - min) / (max - min)) * 100;
+      e.target.style.setProperty('--fill', pct + '%');
+    }
+  });
+
+  // Initialize fills on load
+  window.addEventListener('load', () => {
+    document.querySelectorAll('input.asi-range').forEach(el => {
+      const min = parseFloat(el.min);
+      const max = parseFloat(el.max);
+      const val = parseFloat(el.value);
+      const pct = ((val - min) / (max - min)) * 100;
+      el.style.setProperty('--fill', pct + '%');
+    });
+  });
+
+  // ----- STATIC CHARTS -----
+  const butceChart = echarts.init(document.getElementById('butceChart'));
+  butceChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}<br/>{c}K TL ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontFamily: 'Roboto', fontSize: 12 } },
+    color: [NAVY, '#1e3a6b', '#3a5a8f', '#6b7fa8', '#a6b0c4', LEMON],
+    series: [{
+      type: 'pie',
+      radius: ['45%', '72%'],
+      avoidLabelOverlap: true,
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 14, fontWeight: 500 } },
+      data: [
+        { value: 105, name: 'Performans pazarlama' },
+        { value: 57, name: 'On lansman + influencer' },
+        { value: 37, name: 'Gerilla + pop-up' },
+        { value: 27, name: 'Icerik uretimi' },
+        { value: 22, name: 'Marketplace kampanya' },
+        { value: 20, name: 'PR + arac seti' }
+      ]
+    }]
+  });
+
+  const trendChart = echarts.init(document.getElementById('trendChart'));
+  trendChart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: 50, right: 20, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: ['Yil 1', 'Yil 2', 'Yil 3'], axisLine: { lineStyle: { color: INK } } },
+    yAxis: { type: 'value', name: 'Bin TL', axisLine: { lineStyle: { color: INK } }, splitLine: { lineStyle: { color: '#eee' } } },
+    color: [NAVY],
+    series: [{
+      type: 'bar',
+      data: [275, 750, 1500],
+      itemStyle: { color: NAVY },
+      barWidth: '45%',
+      label: { show: true, position: 'top', formatter: '{c}K TL', fontFamily: 'Roboto' }
+    }]
+  });
+
+  const competitorChart = echarts.init(document.getElementById('competitorChart'));
+  competitorChart.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: 90, right: 30, top: 20, bottom: 40 },
+    xAxis: { type: 'value', name: 'Milyon USD', axisLine: { lineStyle: { color: INK } }, splitLine: { lineStyle: { color: '#eee' } } },
+    yAxis: { type: 'category', data: ['Asimod Y3', 'Suwen (online)', 'Penti (online)'], axisLine: { lineStyle: { color: INK } } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 1.5, itemStyle: { color: LEMON, borderColor: INK, borderWidth: 1 } },
+        { value: 90, itemStyle: { color: '#6b7fa8' } },
+        { value: 55, itemStyle: { color: NAVY } }
+      ],
+      label: { show: true, position: 'right', formatter: '{c}M USD', fontFamily: 'Roboto' }
+    }]
+  });
+
+  const ltvChart = echarts.init(document.getElementById('ltvChart'));
+  ltvChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, textStyle: { fontFamily: 'Roboto' } },
+    grid: { left: 50, right: 20, top: 20, bottom: 50 },
+    xAxis: { type: 'category', data: ['Muhafazakar', 'Orta', 'Iyimser', 'AOV 400+ sonrasi'], axisLine: { lineStyle: { color: INK } } },
+    yAxis: { type: 'value', name: 'Oran', axisLine: { lineStyle: { color: INK } }, splitLine: { lineStyle: { color: '#eee' } } },
+    color: [NAVY, LEMON],
+    series: [
+      { name: 'LTV:CAC', type: 'bar', data: [0.3, 0.8, 1.5, 3.0], itemStyle: { color: NAVY }, barWidth: '35%' },
+      { name: 'Hedef (3:1)', type: 'line', data: [3, 3, 3, 3], itemStyle: { color: LEMON }, lineStyle: { color: LEMON, width: 3, type: 'dashed' }, symbol: 'none' }
+    ]
+  });
+
+  // ----- SIMULATION -----
+  const SAM_TL = 600_000_000 * 36; // 21.6 milyar TL
+  const yearCharts = {};
+  let summaryChart = null;
+
+  function asiSim() {
+    return {
+      aov: 350,
+      years: [
+        { key: 'y1', title: 'Yil 1 - Lansman ve Traksiyon', min: 0, max: 1, step: 0.05, share: 0.05 },
+        { key: 'y2', title: 'Yil 2 - Buyume', min: 0.5, max: 3, step: 0.125, share: 1.0 },
+        { key: 'y3', title: 'Yil 3 - Olgunlasma', min: 1, max: 5, step: 0.2, share: 2.0 }
+      ],
+      fmtTL: TL,
+      fmtNum: NUM,
+      calc(year) {
+        const gmv = SAM_TL * (year.share / 100);
+        const orders = gmv / this.aov;
+        const netRev = gmv / 1.20;
+        const cogs = netRev * 0.35;
+        const commission = netRev * 0.25;
+        const logistics = orders * 150;
+        const contrib = netRev - cogs - commission - logistics;
+        const marginPct = netRev > 0 ? (contrib / netRev) * 100 : 0;
+        return { gmv, orders, netRev, cogs, commission, logistics, contrib, marginPct };
+      },
+      init() {
+        this.$nextTick(() => {
+          this.years.forEach(y => {
+            const el = document.getElementById('chart_' + y.key);
+            if (el) {
+              yearCharts[y.key] = echarts.init(el);
+              this.renderYearChart(y);
+            }
+          });
+          const sel = document.getElementById('summaryChart');
+          if (sel) {
+            summaryChart = echarts.init(sel);
+            this.renderSummary();
+          }
+        });
+      },
+      renderYearChart(year) {
+        const c = this.calc(year);
+        const chart = yearCharts[year.key];
+        if (!chart) return;
+        chart.setOption({
+          tooltip: { trigger: 'item', formatter: '{b}<br/>{c} TL' },
+          grid: { left: 40, right: 30, top: 20, bottom: 40 },
+          xAxis: {
+            type: 'category',
+            data: ['Net gelir', 'COGS', 'Komisyon', 'Lojistik', 'Katki'],
+            axisLine: { lineStyle: { color: '#ffffff' } },
+            axisLabel: { color: '#ffffff', fontSize: 11, fontFamily: 'Roboto' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#ffffff' } },
+            axisLabel: {
+              color: '#ffffff',
+              fontFamily: 'Roboto',
+              formatter: (v) => v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : (v/1e3).toFixed(0) + 'K'
+            },
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+          },
+          series: [{
+            type: 'bar',
+            data: [
+              { value: Math.round(c.netRev), itemStyle: { color: '#ffffff' } },
+              { value: Math.round(c.cogs), itemStyle: { color: '#6b7fa8' } },
+              { value: Math.round(c.commission), itemStyle: { color: '#a6b0c4' } },
+              { value: Math.round(c.logistics), itemStyle: { color: '#d4d8e0' } },
+              { value: Math.round(c.contrib), itemStyle: { color: c.contrib >= 0 ? LEMON : '#ef4444' } }
+            ],
+            barWidth: '55%'
+          }]
+        });
+      },
+      renderSummary() {
+        if (!summaryChart) return;
+        const results = this.years.map(y => ({ title: 'Yil ' + (this.years.indexOf(y)+1), c: this.calc(y) }));
+        summaryChart.setOption({
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          legend: { bottom: 0, textStyle: { color: '#ffffff', fontFamily: 'Roboto' } },
+          grid: { left: 70, right: 30, top: 30, bottom: 50 },
+          xAxis: {
+            type: 'category',
+            data: results.map(r => r.title),
+            axisLine: { lineStyle: { color: '#ffffff' } },
+            axisLabel: { color: '#ffffff', fontFamily: 'Roboto' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#ffffff' } },
+            axisLabel: {
+              color: '#ffffff',
+              fontFamily: 'Roboto',
+              formatter: (v) => v >= 1e6 ? (v/1e6).toFixed(1) + 'M' : (v/1e3).toFixed(0) + 'K'
+            },
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
+          },
+          series: [
+            {
+              name: 'GMV',
+              type: 'bar',
+              data: results.map(r => Math.round(r.c.gmv)),
+              itemStyle: { color: '#ffffff' },
+              barWidth: '30%'
+            },
+            {
+              name: 'Katki marji',
+              type: 'bar',
+              data: results.map(r => Math.round(r.c.contrib)),
+              itemStyle: { color: LEMON },
+              barWidth: '30%'
+            }
+          ]
+        });
+      },
+      updateAll() {
+        this.years.forEach(y => this.renderYearChart(y));
+        this.renderSummary();
+      }
+    };
+  }
+
+  // Responsive resize
+  window.addEventListener('resize', () => {
+    butceChart.resize();
+    trendChart.resize();
+    competitorChart.resize();
+    ltvChart.resize();
+    Object.values(yearCharts).forEach(c => c && c.resize());
+    if (summaryChart) summaryChart.resize();
+  });
+</script>
+
+</body>
+</html>
